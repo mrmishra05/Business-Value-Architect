@@ -66,84 +66,65 @@ class JobScraper:
         """Scrape jobs using multiple APIs and sources"""
         jobs = []
         
-        # Simulate API calls with sample data (replace with actual API calls)
-        sample_jobs = [
-            {
-                'title': f'{job_title} - Senior',
-                'company': 'TechCorp Solutions',
-                'location': 'San Francisco, CA, USA',
-                'region': 'North America',
-                'salary': '$120,000 - $150,000',
-                'experience': '5+ years',
-                'description': 'Leading cloud infrastructure and DevOps practices...',
-                'posted_date': datetime.now().strftime('%Y-%m-%d')
-            },
-            {
-                'title': f'{job_title} - Mid-Level',
-                'company': 'Global Tech Ltd',
-                'location': 'London, UK',
-                'region': 'Europe',
-                'salary': '£70,000 - £85,000',
-                'experience': '3+ years',
-                'description': 'Architecting business solutions and driving digital transformation...',
-                'posted_date': datetime.now().strftime('%Y-%m-%d')
-            },
-            {
-                'title': f'{job_title} - Lead',
-                'company': 'Innovation Hub',
-                'location': 'Sydney, Australia',
-                'region': 'Asia-Pacific',
-                'salary': 'AUD 140,000 - AUD 160,000',
-                'experience': '7+ years',
-                'description': 'Leading DevOps transformation and cloud migration projects...',
-                'posted_date': datetime.now().strftime('%Y-%m-%d')
-            },
-            {
-                'title': f'{job_title} - Senior',
-                'company': 'Tech Innovators',
-                'location': 'Toronto, Canada',
-                'region': 'North America',
-                'salary': 'CAD 110,000 - CAD 130,000',
-                'experience': '4+ years',
-                'description': 'Driving business value through technology architecture...',
-                'posted_date': datetime.now().strftime('%Y-%m-%d')
-            },
-            {
-                'title': f'{job_title} - Principal',
-                'company': 'Digital Solutions AG',
-                'location': 'Zurich, Switzerland',
-                'region': 'Europe',
-                'salary': 'CHF 150,000 - CHF 180,000',
-                'experience': '8+ years',
-                'description': 'Leading enterprise architecture and DevOps strategy...',
-                'posted_date': datetime.now().strftime('%Y-%m-%d')
-            },
-            {
-                'title': f'{job_title} - Senior',
-                'company': 'Tech Bangalore',
-                'location': 'Bangalore, India',
-                'region': 'Asia',
-                'salary': '₹25,00,000 - ₹35,00,000',
-                'experience': '6+ years',
-                'description': 'Architecting scalable solutions and managing DevOps pipelines...',
-                'posted_date': datetime.now().strftime('%Y-%m-%d')
-            }
-        ]
+        # Target countries and their major cities
+        target_locations = {
+            'India': ['Bangalore', 'Mumbai', 'Delhi', 'Hyderabad', 'Chennai', 'Pune'],
+            'Singapore': ['Singapore'],
+            'Netherlands': ['Amsterdam', 'Rotterdam', 'Utrecht', 'The Hague'],
+            'Germany': ['Berlin', 'Munich', 'Frankfurt', 'Hamburg', 'Cologne'],
+            'France': ['Paris', 'Lyon', 'Marseille', 'Toulouse', 'Nice']
+        }
         
-        # Add some randomization to simulate real-time updates
-        selected_jobs = random.sample(sample_jobs, random.randint(3, len(sample_jobs)))
+        # Platforms to simulate
+        platforms = ['LinkedIn', 'Indeed', 'Glassdoor', 'AngelList', 'Naukri', 'Monster', 'StepStone', 'Welcome to the Jungle']
         
-        for job in selected_jobs:
-            jobs.append({
-                'Job Title': job['title'],
-                'Company': job['company'],
-                'Location': job['location'],
-                'Region': job['region'],
-                'Salary': job['salary'],
-                'Experience': job['experience'],
-                'Posted Date': job['posted_date'],
-                'Description': job['description'][:200] + "..." if len(job['description']) > 200 else job['description']
-            })
+        # Work types
+        work_types = ['Remote', 'Hybrid', 'Onsite']
+        
+        # Sample companies by country
+        companies_by_country = {
+            'India': ['Infosys', 'TCS', 'Wipro', 'HCL Technologies', 'Tech Mahindra', 'Flipkart', 'Zomato', 'Paytm', 'Swiggy', 'Freshworks'],
+            'Singapore': ['Grab', 'Sea Limited', 'DBS Bank', 'Singtel', 'Shopee', 'Gojek', 'Stripe', 'Revolut', 'PropertyGuru', 'Carousell'],
+            'Netherlands': ['Booking.com', 'Adyen', 'Philips', 'ING', 'ASML', 'Takeaway.com', 'Coolblue', 'Exact', 'TomTom', 'Randstad'],
+            'Germany': ['SAP', 'Siemens', 'Allianz', 'BMW', 'Mercedes-Benz', 'Zalando', 'Delivery Hero', 'N26', 'Rocket Internet', 'AUTO1'],
+            'France': ['Airbus', 'Thales', 'Atos', 'Capgemini', 'Orange', 'BlaBlaCar', 'Criteo', 'Dassault Systèmes', 'Murex', 'Datadog']
+        }
+        
+        # Salary ranges by country
+        salary_ranges = {
+            'India': ['₹15,00,000 - ₹25,00,000', '₹25,00,000 - ₹40,00,000', '₹40,00,000 - ₹60,00,000', '₹60,00,000 - ₹80,00,000'],
+            'Singapore': ['S$80,000 - S$120,000', 'S$120,000 - S$160,000', 'S$160,000 - S$200,000', 'S$200,000 - S$250,000'],
+            'Netherlands': ['€60,000 - €80,000', '€80,000 - €100,000', '€100,000 - €120,000', '€120,000 - €150,000'],
+            'Germany': ['€65,000 - €85,000', '€85,000 - €110,000', '€110,000 - €130,000', '€130,000 - €160,000'],
+            'France': ['€55,000 - €75,000', '€75,000 - €95,000', '€95,000 - €115,000', '€115,000 - €140,000']
+        }
+        
+        # Generate sample jobs for each country
+        for country, cities in target_locations.items():
+            for _ in range(random.randint(2, 4)):  # 2-4 jobs per country
+                city = random.choice(cities)
+                company = random.choice(companies_by_country[country])
+                platform = random.choice(platforms)
+                work_type = random.choice(work_types)
+                salary = random.choice(salary_ranges[country])
+                experience = random.choice(['2+ years', '3+ years', '4+ years', '5+ years', '6+ years', '7+ years', '8+ years'])
+                
+                job_levels = ['Senior', 'Lead', 'Principal', 'Staff', 'Manager']
+                job_level = random.choice(job_levels)
+                
+                jobs.append({
+                    'Job Title': f'{job_title} - {job_level}',
+                    'Company': company,
+                    'Platform': platform,
+                    'Location': f'{city}, {country}',
+                    'Country': country,
+                    'Work Type': work_type,
+                    'Salary': salary,
+                    'Experience': experience,
+                    'Apply Link': f'https://{platform.lower().replace(" ", "")}.com/jobs/{company.lower().replace(" ", "-")}-{job_title.lower().replace(" ", "-")}-{random.randint(100000, 999999)}',
+                    'Posted Date': datetime.now().strftime('%Y-%m-%d'),
+                    'Description': f'We are looking for a skilled {job_title} to join our {work_type.lower()} team in {city}. The role involves architecting scalable solutions, implementing DevOps best practices, and driving digital transformation initiatives. Perfect opportunity for professionals with {experience} of experience.'
+                })
         
         return jobs
     
@@ -217,10 +198,22 @@ def main():
         df = pd.DataFrame(st.session_state.job_data)
         
         # Sidebar filters
-        regions = st.sidebar.multiselect(
-            "Select Regions",
-            options=df['Region'].unique(),
-            default=df['Region'].unique()
+        countries = st.sidebar.multiselect(
+            "Select Countries",
+            options=df['Country'].unique(),
+            default=df['Country'].unique()
+        )
+        
+        platforms = st.sidebar.multiselect(
+            "Select Platforms",
+            options=df['Platform'].unique(),
+            default=df['Platform'].unique()
+        )
+        
+        work_types = st.sidebar.multiselect(
+            "Select Work Type",
+            options=df['Work Type'].unique(),
+            default=df['Work Type'].unique()
         )
         
         job_titles = st.sidebar.multiselect(
@@ -231,7 +224,9 @@ def main():
         
         # Apply filters
         filtered_df = df[
-            (df['Region'].isin(regions)) &
+            (df['Country'].isin(countries)) &
+            (df['Platform'].isin(platforms)) &
+            (df['Work Type'].isin(work_types)) &
             (df['Job Title'].isin(job_titles))
         ]
         
@@ -242,13 +237,13 @@ def main():
             st.metric("Total Jobs", len(filtered_df))
         
         with col2:
-            st.metric("Regions", len(filtered_df['Region'].unique()))
+            st.metric("Countries", len(filtered_df['Country'].unique()))
         
         with col3:
-            st.metric("Companies", len(filtered_df['Company'].unique()))
+            st.metric("Platforms", len(filtered_df['Platform'].unique()))
         
         with col4:
-            st.metric("Latest Update", f"{(datetime.now() - st.session_state.last_update).seconds}s ago")
+            st.metric("Work Types", len(filtered_df['Work Type'].unique()))
         
         # Main data table
         st.subheader("📊 Job Listings")
@@ -259,7 +254,7 @@ def main():
             show_description = st.checkbox("Show Descriptions", value=False)
         
         # Configure display columns
-        display_columns = ['Job Title', 'Company', 'Location', 'Region', 'Salary', 'Experience', 'Posted Date']
+        display_columns = ['Job Title', 'Company', 'Platform', 'Location', 'Country', 'Work Type', 'Salary', 'Experience', 'Apply Link', 'Posted Date']
         if show_description:
             display_columns.append('Description')
         
@@ -271,19 +266,35 @@ def main():
             column_config={
                 'Job Title': st.column_config.TextColumn(width="medium"),
                 'Company': st.column_config.TextColumn(width="medium"),
+                'Platform': st.column_config.TextColumn(width="small"),
                 'Location': st.column_config.TextColumn(width="medium"),
-                'Region': st.column_config.TextColumn(width="small"),
+                'Country': st.column_config.TextColumn(width="small"),
+                'Work Type': st.column_config.TextColumn(width="small"),
                 'Salary': st.column_config.TextColumn(width="medium"),
                 'Experience': st.column_config.TextColumn(width="small"),
+                'Apply Link': st.column_config.LinkColumn(width="medium"),
                 'Posted Date': st.column_config.DateColumn(width="small"),
                 'Description': st.column_config.TextColumn(width="large") if show_description else None
             }
         )
         
-        # Regional distribution chart
-        st.subheader("📍 Regional Distribution")
-        region_counts = filtered_df['Region'].value_counts()
-        st.bar_chart(region_counts)
+        # Country and Work Type distribution charts
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("🌍 Country Distribution")
+            country_counts = filtered_df['Country'].value_counts()
+            st.bar_chart(country_counts)
+        
+        with col2:
+            st.subheader("💼 Work Type Distribution")
+            work_type_counts = filtered_df['Work Type'].value_counts()
+            st.bar_chart(work_type_counts)
+        
+        # Platform distribution
+        st.subheader("🔗 Platform Distribution")
+        platform_counts = filtered_df['Platform'].value_counts()
+        st.bar_chart(platform_counts)
         
         # Export functionality
         st.subheader("📥 Export Data")
