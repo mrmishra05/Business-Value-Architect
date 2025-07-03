@@ -197,38 +197,51 @@ def main():
     if st.session_state.job_data:
         df = pd.DataFrame(st.session_state.job_data)
         
-        # Sidebar filters
-        countries = st.sidebar.multiselect(
-            "Select Countries",
-            options=df['Country'].unique(),
-            default=df['Country'].unique()
-        )
+        # Ensure all required columns exist
+        required_columns = ['Country', 'Platform', 'Work Type', 'Job Title']
+        missing_columns = [col for col in required_columns if col not in df.columns]
         
-        platforms = st.sidebar.multiselect(
-            "Select Platforms",
-            options=df['Platform'].unique(),
-            default=df['Platform'].unique()
-        )
+        if missing_columns:
+            st.error(f"Missing columns in data: {missing_columns}")
+            st.info("Refreshing data to fix column issues...")
+            st.session_state.job_data = []
+            st.rerun()
         
-        work_types = st.sidebar.multiselect(
-            "Select Work Type",
-            options=df['Work Type'].unique(),
-            default=df['Work Type'].unique()
-        )
-        
-        job_titles = st.sidebar.multiselect(
-            "Select Job Types",
-            options=df['Job Title'].unique(),
-            default=df['Job Title'].unique()
-        )
-        
-        # Apply filters
-        filtered_df = df[
-            (df['Country'].isin(countries)) &
-            (df['Platform'].isin(platforms)) &
-            (df['Work Type'].isin(work_types)) &
-            (df['Job Title'].isin(job_titles))
-        ]
+        # Sidebar filters - only create if columns exist
+        if all(col in df.columns for col in required_columns):
+            countries = st.sidebar.multiselect(
+                "Select Countries",
+                options=sorted(df['Country'].unique()),
+                default=sorted(df['Country'].unique())
+            )
+            
+            platforms = st.sidebar.multiselect(
+                "Select Platforms",
+                options=sorted(df['Platform'].unique()),
+                default=sorted(df['Platform'].unique())
+            )
+            
+            work_types = st.sidebar.multiselect(
+                "Select Work Type",
+                options=sorted(df['Work Type'].unique()),
+                default=sorted(df['Work Type'].unique())
+            )
+            
+            job_titles = st.sidebar.multiselect(
+                "Select Job Types",
+                options=sorted(df['Job Title'].unique()),
+                default=sorted(df['Job Title'].unique())
+            )
+            
+            # Apply filters
+            filtered_df = df[
+                (df['Country'].isin(countries)) &
+                (df['Platform'].isin(platforms)) &
+                (df['Work Type'].isin(work_types)) &
+                (df['Job Title'].isin(job_titles))
+            ]
+        else:
+            filtered_df = df
         
         # Display metrics
         col1, col2, col3, col4 = st.columns(4)
@@ -237,13 +250,22 @@ def main():
             st.metric("Total Jobs", len(filtered_df))
         
         with col2:
-            st.metric("Countries", len(filtered_df['Country'].unique()))
+            if 'Country' in filtered_df.columns:
+                st.metric("Countries", len(filtered_df['Country'].unique()))
+            else:
+                st.metric("Countries", 0)
         
         with col3:
-            st.metric("Platforms", len(filtered_df['Platform'].unique()))
+            if 'Platform' in filtered_df.columns:
+                st.metric("Platforms", len(filtered_df['Platform'].unique()))
+            else:
+                st.metric("Platforms", 0)
         
         with col4:
-            st.metric("Work Types", len(filtered_df['Work Type'].unique()))
+            if 'Work Type' in filtered_df.columns:
+                st.metric("Work Types", len(filtered_df['Work Type'].unique()))
+            else:
+                st.metric("Work Types", 0)
         
         # Main data table
         st.subheader("📊 Job Listings")
@@ -253,29 +275,49 @@ def main():
         with col2:
             show_description = st.checkbox("Show Descriptions", value=False)
         
-        # Configure display columns
-        display_columns = ['Job Title', 'Company', 'Platform', 'Location', 'Country', 'Work Type', 'Salary', 'Experience', 'Apply Link', 'Posted Date']
-        if show_description:
+        # Configure display columns based on what's available
+        base_columns = ['Job Title', 'Company', 'Posted Date']
+        optional_columns = ['Platform', 'Location', 'Country', 'Work Type', 'Salary', 'Experience', 'Apply Link']
+        
+        display_columns = base_columns.copy()
+        for col in optional_columns:
+            if col in filtered_df.columns:
+                display_columns.append(col)
+        
+        if show_description and 'Description' in filtered_df.columns:
             display_columns.append('Description')
+        
+        # Create column config dynamically
+        column_config = {
+            'Job Title': st.column_config.TextColumn(width="medium"),
+            'Company': st.column_config.TextColumn(width="medium"),
+            'Posted Date': st.column_config.DateColumn(width="small"),
+        }
+        
+        # Add optional column configs if they exist
+        if 'Platform' in filtered_df.columns:
+            column_config['Platform'] = st.column_config.TextColumn(width="small")
+        if 'Location' in filtered_df.columns:
+            column_config['Location'] = st.column_config.TextColumn(width="medium")
+        if 'Country' in filtered_df.columns:
+            column_config['Country'] = st.column_config.TextColumn(width="small")
+        if 'Work Type' in filtered_df.columns:
+            column_config['Work Type'] = st.column_config.TextColumn(width="small")
+        if 'Salary' in filtered_df.columns:
+            column_config['Salary'] = st.column_config.TextColumn(width="medium")
+        if 'Experience' in filtered_df.columns:
+            column_config['Experience'] = st.column_config.TextColumn(width="small")
+        if 'Apply Link' in filtered_df.columns:
+            column_config['Apply Link'] = st.column_config.LinkColumn(width="medium")
+        if show_description and 'Description' in filtered_df.columns:
+            column_config['Description'] = st.column_config.TextColumn(width="large")
         
         # Display the table
         st.dataframe(
             filtered_df[display_columns],
             use_container_width=True,
             hide_index=True,
-            column_config={
-                'Job Title': st.column_config.TextColumn(width="medium"),
-                'Company': st.column_config.TextColumn(width="medium"),
-                'Platform': st.column_config.TextColumn(width="small"),
-                'Location': st.column_config.TextColumn(width="medium"),
-                'Country': st.column_config.TextColumn(width="small"),
-                'Work Type': st.column_config.TextColumn(width="small"),
-                'Salary': st.column_config.TextColumn(width="medium"),
-                'Experience': st.column_config.TextColumn(width="small"),
-                'Apply Link': st.column_config.LinkColumn(width="medium"),
-                'Posted Date': st.column_config.DateColumn(width="small"),
-                'Description': st.column_config.TextColumn(width="large") if show_description else None
-            }
+            column_config=column_config
         )
         
         # Country and Work Type distribution charts
@@ -283,18 +325,27 @@ def main():
         
         with col1:
             st.subheader("🌍 Country Distribution")
-            country_counts = filtered_df['Country'].value_counts()
-            st.bar_chart(country_counts)
+            if 'Country' in filtered_df.columns and not filtered_df.empty:
+                country_counts = filtered_df['Country'].value_counts()
+                st.bar_chart(country_counts)
+            else:
+                st.info("No country data available")
         
         with col2:
             st.subheader("💼 Work Type Distribution")
-            work_type_counts = filtered_df['Work Type'].value_counts()
-            st.bar_chart(work_type_counts)
+            if 'Work Type' in filtered_df.columns and not filtered_df.empty:
+                work_type_counts = filtered_df['Work Type'].value_counts()
+                st.bar_chart(work_type_counts)
+            else:
+                st.info("No work type data available")
         
         # Platform distribution
         st.subheader("🔗 Platform Distribution")
-        platform_counts = filtered_df['Platform'].value_counts()
-        st.bar_chart(platform_counts)
+        if 'Platform' in filtered_df.columns and not filtered_df.empty:
+            platform_counts = filtered_df['Platform'].value_counts()
+            st.bar_chart(platform_counts)
+        else:
+            st.info("No platform data available")
         
         # Export functionality
         st.subheader("📥 Export Data")
